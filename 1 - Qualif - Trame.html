@@ -138,7 +138,7 @@
 
     <div class="pipeline">
         <span class="step active">1. QUALIF (Sales)</span>
-        <span class="step">2. RT (CTO Validation)</span>
+        <span class="step">2. RT (Tech Validation)</span>
         <span class="step">3. GO/NO-GO</span>
         <span class="step">4. SOURCING</span>
         <span class="step">5. PRÉSENTATION</span>
@@ -170,7 +170,8 @@
                         <option value="">-- Sélectionner --</option>
                         <option value="10">Signataire Direct (EB) - Gère le budget</option>
                         <option value="7">Manager technique (Valideur / Appui)</option>
-                        <option value="3">RH / Achats (Process pur)</option>
+                        <option value="5">RH / Achats (Process pur)</option>
+                        <option value="1">Technique de l'équipe</option>
                         <option value="0">Consultant / Externe (Zéro pouvoir)</option>
                     </select>
                     <span class="score-hint" id="hint_power">Score: 0</span>
@@ -181,6 +182,7 @@
                         <option value="">-- Sélectionner --</option>
                         <option value="10">Validé et disponible</option>
                         <option value="5">En cours de déblocage</option>
+                        <option value="0">Potentiellement dans trois mois ou plus</option>
                         <option value="-10">Pas de budget</option>
                     </select>
                     <span class="score-hint" id="hint_budget">Score: 0</span>
@@ -232,10 +234,14 @@
                     <label>Problématique majeure</label>
                     <select id="tech_problem" class="val-field" onchange="handleCustom(this)">
                         <option value="">-- Sélectionner --</option>
+                        <option value="CTO">CTO consultant</option>
+                        <option value="Audit Architecture">Audit Architecture</option>
+                        <option value="Fullstack">Renfort Fullstack</option>
+                        <option value="Frontend">Renfort Frontend</option>
+                        <option value="Backend">Renfort Backend</option>
                         <option value="Mise en place RAG">Mise en place RAG</option>
                         <option value="Migration Cloud">Migration Cloud</option>
                         <option value="Industrialisation ML">Industrialisation ML</option>
-                        <option value="Audit Architecture">Audit Architecture</option>
                         <option value="custom">Autre...</option>
                     </select>
                     <input type="text" class="custom-option" id="custom_tech_problem" placeholder="Précisez le problème...">
@@ -245,15 +251,17 @@
                     <select id="team_size" class="val-field">
                         <option value="">-- Sélectionner --</option>
                         <option value="Solo">Solo / Lancement</option>
-                        <option value="Petite">2-5 personnes</option>
-                        <option value="Large">>10 personnes</option>
+                        <option value="Petite">2-4 personnes</option>
+                        <option value="Medium">5-9 personnes</option>
+                        <option value="Large">>=10 personnes</option>
                     </select>
                 </div>
                 <div class="question">
                     <label>Impact attendu</label>
                     <select id="impact" class="val-field">
                         <option value="">-- Sélectionner --</option>
-                        <option value="Expertise">Expertise (Lead)</option>
+                        <option value="Stratégie">Accompagnement Stratégique</option>
+                        <option value="Expertise">Expertise technique (Lead)</option>
                         <option value="Force de frappe">Force de frappe (Delivery)</option>
                         <option value="Conseil">Conseil uniquement</option>
                     </select>
@@ -279,6 +287,7 @@
                     <select id="showcase" class="val-field">
                         <option value="">-- Sélectionner --</option>
                         <option value="Aucun">Aucun</option>
+                        <option value="Offre">Remontrer l'offre Data/IA en détails</option>
                         <option value="Assistant Messagerie">Assistant Messagerie</option>
                         <option value="RAG Hospitalier">RAG Hospitalier</option>
                     </select>
