@@ -14,6 +14,7 @@
             --danger: #dc2626;
             --bg: #f1f5f9;
             --card: #ffffff;
+            --error-halo: rgba(220, 38, 38, 0.2);
         }
         body {
             font-family: 'Inter', -apple-system, sans-serif;
@@ -62,8 +63,14 @@
             font-size: 0.95rem;
             background: #fff;
             box-sizing: border-box;
+            transition: all 0.2s ease;
         }
         
+        .invalid {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 4px var(--error-halo);
+        }
+
         .score-hint {
             font-size: 0.75rem;
             font-weight: 700;
@@ -73,19 +80,6 @@
         }
 
         .custom-option { margin-top: 8px; display: none; background: var(--primary-light); border-style: dashed; }
-
-        .warning-ia {
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
-            color: #9a3412;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
 
         .score-box {
             position: sticky;
@@ -104,13 +98,20 @@
         .score-val { font-size: 1.8rem; font-weight: 800; color: #38bdf8; }
 
         .btn-export {
-            background: var(--success);
+            background: var(--secondary);
             color: white;
             border: none;
             padding: 14px 28px;
             border-radius: 8px;
-            cursor: pointer;
+            cursor: not-allowed;
             font-weight: 700;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+        .btn-export.ready {
+            background: var(--success);
+            cursor: pointer;
+            opacity: 1;
         }
     </style>
 </head>
@@ -127,15 +128,7 @@
         <span class="step">2. RT (CTO Validation)</span>
         <span class="step">3. GO/NO-GO</span>
         <span class="step">4. SOURCING</span>
-        <span class="step">5. PRÉSENTATION CLIENT</span>
-    </div>
-
-    <div class="warning-ia">
-        <span>⚠️</span>
-        <div>
-            <strong>RÈGLE D'OR :</strong> Score ≥ 22 requis pour la RT. <br>
-            <strong>PRÉ-REQUIS :</strong> Activez l'IA Notes avant de débuter.
-        </div>
+        <span class="step">5. PRÉSENTATION</span>
     </div>
 
     <form id="qualifForm">
@@ -144,45 +137,46 @@
             <div class="grid">
                 <div class="question full-width">
                     <label>Client (Nom, Poste précis, Équipe)</label>
-                    <input type="text" id="client_info" placeholder="ex: Marc Lefebvre, VP Engineering, Data Platform Team" required>
+                    <input type="text" id="client_info" class="val-field" placeholder="ex: Marc Lefebvre, VP Engineering, Data Team" required>
                 </div>
                 <div class="question">
                     <label>Décision Financière</label>
-                    <select id="score_power" onchange="updateScore()">
-                        <option value="0">-- Sélectionner --</option>
+                    <select id="score_power" class="val-field" onchange="updateScore()">
+                        <option value="">-- Sélectionner --</option>
                         <option value="10">Signataire Direct (EB) - Gère le budget</option>
-                        <option value="7">Manager technique (Valideur - Appuie la propale)</option>
-                        <option value="3">RH / Achats (Process administratif uniquement)</option>
+                        <option value="7">Manager technique (Valideur / Appui)</option>
+                        <option value="3">RH / Achats (Process pur)</option>
                         <option value="0">Consultant / Externe (Zéro pouvoir)</option>
                     </select>
                     <span class="score-hint" id="hint_power">Score: 0</span>
                 </div>
                 <div class="question">
-                    <label>Budget (Obligatoire)</label>
-                    <select id="score_budget" onchange="updateScore()">
-                        <option value="0">-- Sélectionner --</option>
-                        <option value="10">Validé et disponible immédiatement</option>
-                        <option value="5">En cours de déblocage (Prévu Q2/Q3)</option>
-                        <option value="-10">Pas de budget (Abandon ou Suivi)</option>
+                    <label>Budget</label>
+                    <select id="score_budget" class="val-field" onchange="updateScore()">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="10">Validé et disponible</option>
+                        <option value="5">En cours de déblocage</option>
+                        <option value="-10">Pas de budget</option>
                     </select>
                     <span class="score-hint" id="hint_budget">Score: 0</span>
                 </div>
                 <div class="question">
-                    <label>Timeline / Urgence</label>
-                    <select id="score_urgency" onchange="updateScore()">
-                        <option value="0">-- Sélectionner --</option>
+                    <label>Urgence</label>
+                    <select id="score_urgency" class="val-field" onchange="updateScore()">
+                        <option value="">-- Sélectionner --</option>
                         <option value="10">Démarrage < 15 jours</option>
                         <option value="7">Sous 1 mois</option>
-                        <option value="2">Projet "Long terme" / Veille</option>
+                        <option value="2">Long terme / Veille</option>
                     </select>
                     <span class="score-hint" id="hint_urgency">Score: 0</span>
                 </div>
                 <div class="question">
-                    <label>Valeur Métier / Enjeu</label>
-                    <select id="business_value">
+                    <label>Valeur Métier</label>
+                    <select id="business_value" class="val-field">
+                        <option value="">-- Sélectionner --</option>
                         <option value="Strategique">Stratégique (Objectif Groupe)</option>
-                        <option value="Operationnel">Opérationnel (Gain de productivité)</option>
-                        <option value="Maintenance">Maintenance / Renfort ponctuel</option>
+                        <option value="Operationnel">Opérationnel (Gain productivité)</option>
+                        <option value="Maintenance">Maintenance / Renfort</option>
                     </select>
                 </div>
             </div>
@@ -193,47 +187,49 @@
             <div class="grid">
                 <div class="question">
                     <label>Domaine IT Précis</label>
-                    <select id="tech_domain" onchange="handleCustom(this)">
+                    <select id="tech_domain" class="val-field" onchange="handleCustom(this)">
+                        <option value="">-- Sélectionner --</option>
                         <option value="IA / LLM / RAG">IA / LLM / RAG</option>
-                        <option value="Data Engineering / Pipeline">Data Engineering / Pipeline</option>
-                        <option value="Data Science / ML Ops">Data Science / ML Ops</option>
-                        <option value="Architecture Data / BDD">Architecture Data / BDD</option>
-                        <option value="Fullstack (React/Python)">Fullstack (React/Python)</option>
-                        <option value="DevOps / Cloud Infra">DevOps / Cloud Infra</option>
+                        <option value="Data Engineering">Data Engineering</option>
+                        <option value="Data Science">Data Science</option>
+                        <option value="Architecture Data">Architecture Data</option>
+                        <option value="Fullstack">Fullstack</option>
                         <option value="custom">Autre (Préciser...)</option>
                     </select>
-                    <input type="text" class="custom-option" id="custom_tech_domain">
+                    <input type="text" class="custom-option" id="custom_tech_domain" placeholder="Détaillez...">
                 </div>
                 <div class="question">
                     <label>Stack Technique Actuelle</label>
-                    <input type="text" id="tech_stack" placeholder="ex: Python, Azure, Snowflake, dbt...">
+                    <input type="text" id="tech_stack" class="val-field" placeholder="ex: Python, Azure, Snowflake...">
                 </div>
                 <div class="question full-width">
-                    <label>Problématique technique à résoudre</label>
-                    <select id="tech_problem" onchange="handleCustom(this)">
-                        <option value="Mise en place RAG sur données internes">Mise en place RAG sur données internes</option>
-                        <option value="Migration Cloud / Data Warehouse">Migration Cloud / Data Warehouse</option>
-                        <option value="Industrialisation de modèles ML">Industrialisation de modèles ML</option>
-                        <option value="Renfort de dev pour MVP rapide">Renfort de dev pour MVP rapide</option>
-                        <option value="Audit d'architecture / BDD">Audit d'architecture / BDD</option>
-                        <option value="custom">Autre besoin complexe...</option>
+                    <label>Problématique majeure</label>
+                    <select id="tech_problem" class="val-field" onchange="handleCustom(this)">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="Mise en place RAG">Mise en place RAG</option>
+                        <option value="Migration Cloud">Migration Cloud</option>
+                        <option value="Industrialisation ML">Industrialisation ML</option>
+                        <option value="Audit Architecture">Audit Architecture</option>
+                        <option value="custom">Autre...</option>
                     </select>
-                    <input type="text" class="custom-option" id="custom_tech_problem">
+                    <input type="text" class="custom-option" id="custom_tech_problem" placeholder="Précisez le problème...">
                 </div>
                 <div class="question">
-                    <label>Taille de l'équipe technique</label>
-                    <select id="team_size">
-                        <option value="Seul / Lancement">Seul / Lancement</option>
-                        <option value="2-5 personnes">2-5 personnes</option>
-                        <option value=">10 personnes">>10 personnes</option>
+                    <label>Équipe Technique</label>
+                    <select id="team_size" class="val-field">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="Solo">Solo / Lancement</option>
+                        <option value="Petite">2-5 personnes</option>
+                        <option value="Large">>10 personnes</option>
                     </select>
                 </div>
                 <div class="question">
                     <label>Impact attendu</label>
-                    <select id="impact">
-                        <option value="Expertise / Architecture">Expertise / Architecture (Lead)</option>
-                        <option value="Force de frappe / Delivery">Force de frappe / Delivery</option>
-                        <option value="Cadrage technique uniquement">Cadrage technique uniquement</option>
+                    <select id="impact" class="val-field">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="Expertise">Expertise (Lead)</option>
+                        <option value="Force de frappe">Force de frappe (Delivery)</option>
+                        <option value="Conseil">Conseil uniquement</option>
                     </select>
                 </div>
             </div>
@@ -244,46 +240,80 @@
             <div class="grid">
                 <div class="question">
                     <label>Objectif de la RT</label>
-                    <select id="rt_goal">
-                        <option value="Valider la faisabilité">Valider la faisabilité technique</option>
-                        <option value="Convaincre (Vente expertise)">Convaincre (Vente expertise)</option>
-                        <option value="Chiffrer le projet">Chiffrer le projet / Estimation</option>
-                        <option value="Définir le profil consultant">Définir le profil consultant</option>
+                    <select id="rt_goal" class="val-field">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="Faisabilité">Valider faisabilité</option>
+                        <option value="Convaincre">Vendre expertise</option>
+                        <option value="Chiffrer">Chiffrage / Estimation</option>
+                        <option value="Profil">Définir profil</option>
                     </select>
                 </div>
                 <div class="question">
-                    <label>Showcase à présenter</label>
-                    <select id="showcase">
-                        <option value="Aucun">Aucun (Discussion)</option>
-                        <option value="Assistant Messagerie IA">Assistant Messagerie / Traduction</option>
-                        <option value="LLM+RAG Hospitalier">LLM+RAG Hospitalier (Graphe)</option>
+                    <label>Showcase suggéré</label>
+                    <select id="showcase" class="val-field">
+                        <option value="">-- Sélectionner --</option>
+                        <option value="Aucun">Aucun</option>
+                        <option value="Assistant Messagerie">Assistant Messagerie</option>
+                        <option value="RAG Hospitalier">RAG Hospitalier</option>
                     </select>
                 </div>
                 <div class="question full-width">
-                    <label>Notes & Alertes (Chaotique ? Objectifs flous ?)</label>
-                    <textarea id="notes" rows="6" placeholder="Soyez précis : Pourquoi le CTO doit-il intervenir ? Quels sont les points de friction ?"></textarea>
+                    <label>Notes & Alertes</label>
+                    <textarea id="notes" class="val-field" rows="4" placeholder="Pourquoi l'intervention du CTO est nécessaire ?"></textarea>
                 </div>
             </div>
         </section>
 
         <div class="score-box">
             <div>
-                <span id="temp_label" class="temp-indicator">TEMPÉRATURE : FROID</span>
+                <span id="temp_label" class="temp-indicator" style="background: var(--danger)">TEMPÉRATURE : FROID</span>
             </div>
             <div class="score-val"><span id="final_score">0</span>/30</div>
-            <button type="button" class="btn-export" onclick="placeholderExport()">EXPORTER (.MD)</button>
+            <button type="button" id="exportBtn" class="btn-export" onclick="placeholderExport()" disabled>EXPORTER (.MD)</button>
         </div>
     </form>
 </div>
 
 <script>
+    const form = document.getElementById('qualifForm');
+    const fields = document.querySelectorAll('.val-field');
+    const btn = document.getElementById('exportBtn');
+
     function handleCustom(select) {
         const customInput = select.nextElementSibling;
         if (select.value === 'custom') {
             customInput.style.display = 'block';
-            customInput.focus();
+            customInput.classList.add('val-field');
         } else {
             customInput.style.display = 'none';
+            customInput.classList.remove('val-field');
+            customInput.value = "";
+        }
+        validateForm();
+    }
+
+    function validateForm() {
+        let allValid = true;
+        // On récupère les champs à valider (inclut les custom s'ils sont affichés)
+        const currentFields = document.querySelectorAll('.val-field');
+
+        currentFields.forEach(field => {
+            if (field.offsetParent !== null) { // Vérifie si le champ est visible
+                if (field.value.trim() === "") {
+                    field.classList.add('invalid');
+                    allValid = false;
+                } else {
+                    field.classList.remove('invalid');
+                }
+            }
+        });
+
+        if (allValid) {
+            btn.classList.add('ready');
+            btn.disabled = false;
+        } else {
+            btn.classList.remove('ready');
+            btn.disabled = true;
         }
     }
 
@@ -298,31 +328,29 @@
 
         let total = p + b + u;
         if (total < 0) total = 0;
-        if (total > 30) total = 30;
-
         document.getElementById('final_score').innerText = total;
 
         const label = document.getElementById('temp_label');
         if (total >= 22) { 
-            label.innerText = "CHAUD -> GO RT"; 
-            label.style.background = "#16a34a";
-            label.style.color = "white";
+            label.innerText = "CHAUD -> GO RT"; label.style.background = "#16a34a";
         } else if (total >= 12) { 
-            label.innerText = "TIÈDE -> SUIVI"; 
-            label.style.background = "#ca8a04";
-            label.style.color = "white";
+            label.innerText = "TIÈDE -> SUIVI"; label.style.background = "#ca8a04";
         } else { 
-            label.innerText = "FROID -> ABANDON"; 
-            label.style.background = "#dc2626";
-            label.style.color = "white";
+            label.innerText = "FROID -> ABANDON"; label.style.background = "#dc2626";
         }
+        validateForm();
     }
+
+    // Écouteur global sur le formulaire pour détecter n'importe quel changement
+    form.addEventListener('input', validateForm);
+    form.addEventListener('change', validateForm);
 
     function placeholderExport() {
-        alert("Placeholder : La génération du fichier Markdown sera activée une fois le questionnaire validé.");
+        alert("Succès ! Tous les champs sont remplis. Le MD pourra être généré ici.");
     }
 
-    updateScore();
+    // Lancement initial
+    validateForm();
 </script>
 
 </body>
