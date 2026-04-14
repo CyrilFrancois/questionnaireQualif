@@ -157,6 +157,10 @@
             <h2>A. Business & Pouvoir</h2>
             <div class="grid">
                 <div class="question full-width">
+                    <label>Entreprise</label>
+                    <input type="text" id="company_info" class="val-field" placeholder="Le nom de l'entreprise" required>
+                </div>
+                <div class="question full-width">
                     <label>Client (Nom, Poste précis, Équipe)</label>
                     <input type="text" id="client_info" class="val-field" placeholder="ex: Marc Lefebvre, VP Engineering, Data Team" required>
                 </div>
@@ -363,6 +367,7 @@
     form.addEventListener('change', validateForm);
 
     function exportFile(type) {
+        const company = document.getElementById('company_info').value;
         const client = document.getElementById('client_info').value;
         const score = document.getElementById('final_score').innerText;
         const temp = document.getElementById('temp_label').innerText;
@@ -373,17 +378,17 @@
         const problem = document.getElementById('tech_problem').value === 'custom' ? document.getElementById('custom_tech_problem').value : getTxt('tech_problem');
 
         if (type === 'md') {
-            const mdContent = `# Rapport de Qualification GoMind : ${client}\n\n## 🌡️ Synthèse\n**Statut :** ${temp}\n**Score :** ${score}/30\n\n### Détail :\n* Pouvoir : ${getTxt('score_power')}\n* Budget : ${getTxt('score_budget')}\n* Urgence : ${getTxt('score_urgency')}\n\n---\n\n## 🛠️ Technique\n* Domaine : ${domain}\n* Stack : ${document.getElementById('tech_stack').value}\n* Problème : ${problem}\n* Équipe : ${getTxt('team_size')} | Impact : ${getTxt('impact')}\n\n---\n\n## 🎯 Objectifs RT\n* But : ${getTxt('rt_goal')}\n* Showcase : ${getTxt('showcase')}\n\n### Notes\n${notes}`;
+            const mdContent = `# Rapport de Qualification GoMind x ${company}: ${client}\n\n## 🌡️ Synthèse\n**Statut :** ${temp}\n**Score :** ${score}/30\n\n### Détail :\n* Pouvoir : ${getTxt('score_power')}\n* Budget : ${getTxt('score_budget')}\n* Urgence : ${getTxt('score_urgency')}\n\n---\n\n## 🛠️ Technique\n* Domaine : ${domain}\n* Stack : ${document.getElementById('tech_stack').value}\n* Problème : ${problem}\n* Équipe : ${getTxt('team_size')} | Impact : ${getTxt('impact')}\n\n---\n\n## 🎯 Objectifs RT\n* But : ${getTxt('rt_goal')}\n* Showcase : ${getTxt('showcase')}\n\n### Notes\n${notes}`;
             const blob = new Blob([mdContent], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `QUALIF_${client.replace(/\s+/g, '_')}.md`;
+            a.download = `QUALIF_${company}_${client.replace(/\s+/g, '_')}.md`;
             a.click();
         } else {
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
-                <html><head><title>Qualification GoMind - ${client}</title>
+                <html><head><title>Qualification GoMind x ${company} - ${client}</title>
                 <style>
                     body { font-family: sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
                     h1 { color: #1e40af; border-bottom: 2px solid #1e40af; }
@@ -392,6 +397,7 @@
                     .details { margin-top: 20px; border: 1px solid #cbd5e1; padding: 15px; border-radius: 8px; }
                 </style></head><body>
                 <h1>Rapport de Qualification GoMind</h1>
+                <p><strong>Entrpise :</strong> ${company}</p>
                 <p><strong>Client :</strong> ${client}</p>
                 <div class="score" style="background:${document.getElementById('temp_label').style.background}">${temp} (${score}/30)</div>
                 <h2>Analyse Stratégique</h2>
