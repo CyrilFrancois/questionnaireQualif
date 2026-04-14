@@ -1,101 +1,112 @@
-import os
-
-html_content = """
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoMind - Qualification Tool</title>
+    <title>GoMind - Qualification Stratégique & Technique</title>
     <style>
         :root {
-            --primary: #2563eb;
+            --primary: #1e40af;
+            --primary-light: #eff6ff;
             --secondary: #64748b;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg: #f8fafc;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --danger: #dc2626;
+            --bg: #f1f5f9;
             --card: #ffffff;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg);
-            color: #1e293b;
+            color: #0f172a;
+            line-height: 1.5;
             margin: 0;
             padding: 20px;
         }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        h1 { color: var(--primary); margin: 0; font-size: 2.5rem; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { color: var(--primary); margin: 0; font-size: 2.8rem; letter-spacing: -1px; }
+        
         .pipeline {
             display: flex;
             justify-content: space-between;
             background: var(--card);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+            position: relative;
         }
-        .step { font-size: 0.8rem; font-weight: bold; color: var(--secondary); opacity: 0.5; }
-        .step.active { color: var(--primary); opacity: 1; border-bottom: 2px solid var(--primary); }
+        .step { font-size: 0.75rem; font-weight: 800; color: var(--secondary); opacity: 0.4; text-transform: uppercase; }
+        .step.active { color: var(--primary); opacity: 1; border-bottom: 3px solid var(--primary); }
 
-        .container { max-width: 900px; margin: 0 auto; }
         section { 
             background: var(--card); 
-            padding: 20px; 
-            border-radius: 10px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 25px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
-        h2 { border-left: 4px solid var(--primary); padding-left: 10px; font-size: 1.2rem; margin-top: 0; }
+        h2 { border-left: 5px solid var(--primary); padding-left: 15px; font-size: 1.3rem; margin-top: 0; margin-bottom: 20px; color: var(--primary); }
         
-        .question { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; }
-        select, input[type="text"], textarea {
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .full-width { grid-column: span 2; }
+
+        .question { margin-bottom: 18px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        
+        select, input, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            box-sizing: border-box;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #fff;
         }
-        .custom-option { margin-top: 5px; display: none; }
+        select:focus, input:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
+        
+        .custom-option { margin-top: 8px; display: none; background: var(--primary-light); border-style: dashed; }
+
+        .warning-ia {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .score-box {
             position: sticky;
             bottom: 20px;
-            background: var(--primary);
+            background: #1e293b;
             color: white;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 10px 15px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            z-index: 100;
         }
-        .score-val { font-size: 1.5rem; font-weight: bold; }
+        .temp-indicator { font-size: 1.1rem; font-weight: bold; padding: 5px 15px; border-radius: 20px; }
+        .score-val { font-size: 1.8rem; font-weight: 800; color: #38bdf8; }
 
-        .warning-ia {
-            background: #fffbeb;
-            border: 1px solid #f59e0b;
-            color: #92400e;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-        }
-
-        .btn {
+        .btn-export {
             background: var(--success);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
+            padding: 14px 28px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
+            transition: all 0.2s;
         }
-        .btn:hover { filter: brightness(0.9); }
+        .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); }
     </style>
 </head>
 <body>
@@ -103,96 +114,147 @@ html_content = """
 <div class="container">
     <header>
         <h1>GoMind</h1>
-        <p>Outil de Qualification Commerciale v1.0</p>
+        <p style="color: var(--secondary)">Protocole de Qualification CTO & IA</p>
     </header>
 
     <div class="pipeline">
-        <span class="step active">1. QUALIF</span>
-        <span class="step">2. RT (CTO)</span>
+        <span class="step active">1. QUALIF (Sales)</span>
+        <span class="step">2. RT (CTO Validation)</span>
         <span class="step">3. GO/NO-GO</span>
-        <span class="step">4. CHASSE</span>
-        <span class="step">5. PRÉSENTATION</span>
+        <span class="step">4. SOURCING</span>
+        <span class="step">5. PRÉSENTATION CLIENT</span>
     </div>
 
     <div class="warning-ia">
-        ⚠️ <strong>Note :</strong> Pour valider l'étape et passer en RT, vous devez joindre ce questionnaire complété <strong>ET</strong> le compte-rendu de la prise de notes automatique IA. Activez votre outil de transcription avant de commencer.
+        <span>⚠️</span>
+        <div>
+            <strong>RÈGLE D'OR :</strong> La RT n'est déclenchée que si le score est vert. <br>
+            <strong>PRÉ-REQUIS :</strong> Lancer l'enregistrement/transcription IA avant de poser la première question.
+        </div>
     </div>
 
     <form id="qualifForm">
         <section>
-            <h2>A. Identité & Décision</h2>
-            <div class="question">
-                <label>Nom du Client & Équipe</label>
-                <input type="text" id="client_name" placeholder="ex: Jean Dupont - Head of Data" required>
-            </div>
-            <div class="question">
-                <label>Pouvoir de Décision Financière</label>
-                <select id="score_power" onchange="updateScore()">
-                    <option value="10">Signataire direct (EB)</option>
-                    <option value="7">Prescripteur fort (rencontre EB prévue)</option>
-                    <option value="3">Influenceur uniquement</option>
-                    <option value="0">Aucun / Curiosité</option>
-                </select>
-            </div>
-        </section>
-
-        <section>
-            <h2>B. Budget & Urgence (Critique)</h2>
-            <div class="question">
-                <label>État du Budget</label>
-                <select id="score_budget" onchange="handleCustom(this); updateScore()">
-                    <option value="10">Budget validé et alloué</option>
-                    <option value="5">Budget en cours de validation</option>
-                    <option value="0">Pas de budget (Abandon)</option>
-                    <option value="custom">Autre (préciser...)</option>
-                </select>
-                <input type="text" class="custom-option" id="custom_budget" placeholder="Précisez...">
-            </div>
-            <div class="question">
-                <label>Urgence / Démarrage</label>
-                <select id="score_urgency" onchange="updateScore()">
-                    <option value="10">ASAP / < 1 mois</option>
-                    <option value="5">1 à 3 mois</option>
-                    <option value="0">Veille / Année prochaine</option>
-                </select>
+            <h2>A. Business & Pouvoir</h2>
+            <div class="grid">
+                <div class="question">
+                    <label>Client (Nom, Poste, Équipe)</label>
+                    <input type="text" id="client_info" placeholder="ex: Marc Lefebvre, VP Engineering, Platform Team" required>
+                </div>
+                <div class="question">
+                    <label>Décision Financière</label>
+                    <select id="score_power" onchange="updateScore()">
+                        <option value="0">-- Sélectionner --</option>
+                        <option value="10">Signataire (EB) - A le budget</option>
+                        <option value="7">Manager technique (Valideur - Besoin de l'EB)</option>
+                        <option value="3">RH / Achats (Process pur)</option>
+                        <option value="0">Consultant externe (Zéro pouvoir)</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <label>Budget (Obligatoire)</label>
+                    <select id="score_budget" onchange="updateScore()">
+                        <option value="0">-- Sélectionner --</option>
+                        <option value="10">Validé et disponible immédiatement</option>
+                        <option value="5">En cours de déblocage (Q2/Q3)</option>
+                        <option value="-10">Pas de budget (Stop)</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <label>Timeline / Urgence</label>
+                    <select id="score_urgency" onchange="updateScore()">
+                        <option value="10">Démarrage < 15 jours</option>
+                        <option value="7">Sous 1 mois</option>
+                        <option value="2">Projet "Long terme" / Veille</option>
+                    </select>
+                </div>
             </div>
         </section>
 
         <section>
-            <h2>C. Technique & Faisabilité</h2>
-            <div class="question">
-                <label>Domaine Technique Principal</label>
-                <select id="tech_domain" onchange="handleCustom(this)">
-                    <option value="IA Generative / LLM">IA Generative / LLM</option>
-                    <option value="Data Engineering">Data Engineering</option>
-                    <option value="Architecture Cloud">Architecture Cloud</option>
-                    <option value="Fullstack / BDD">Fullstack / BDD</option>
-                    <option value="custom">Autre domaine...</option>
-                </select>
-                <input type="text" class="custom-option" id="custom_tech" placeholder="Précisez la stack...">
-            </div>
-            <div class="question">
-                <label>Showcase à présenter en RT ?</label>
-                <select id="showcase">
-                    <option value="Aucun">Aucun</option>
-                    <option value="Assistant Messagerie IA">Assistant Messagerie / Traduction</option>
-                    <option value="LLM+RAG Hospitalier">LLM + RAG + Graphe (Santé)</option>
-                </select>
+            <h2>B. Expertise Technique & Besoins</h2>
+            <div class="grid">
+                <div class="question">
+                    <label>Domaine IT Précis</label>
+                    <select id="tech_domain" onchange="handleCustom(this)">
+                        <option value="IA / LLM / RAG">IA / LLM / RAG</option>
+                        <option value="Data Engineering / Pipeline">Data Engineering / Pipeline</option>
+                        <option value="Data Science / ML Ops">Data Science / ML Ops</option>
+                        <option value="Fullstack (React/Python)">Fullstack (React/Python)</option>
+                        <option value="DevOps / Cloud Infra">DevOps / Cloud Infra</option>
+                        <option value="Architecture Data / BDD">Architecture Data / BDD</option>
+                        <option value="custom">Autre (Préciser...)</option>
+                    </select>
+                    <input type="text" class="custom-option" id="custom_tech_domain">
+                </div>
+                <div class="question">
+                    <label>Stack Technique Actuelle</label>
+                    <input type="text" id="tech_stack" placeholder="ex: Python, Azure, Snowflake, dbt...">
+                </div>
+                <div class="question full-width">
+                    <label>Problématique Technique majeure à résoudre</label>
+                    <select id="tech_problem" onchange="handleCustom(this)">
+                        <option value="Mise en place RAG sur données internes">Mise en place RAG sur données internes</option>
+                        <option value="Migration Cloud / Data Warehouse">Migration Cloud / Data Warehouse</option>
+                        <option value="Industrialisation de modèles ML">Industrialisation de modèles ML</option>
+                        <option value="Renfort de dev pour MVP rapide">Renfort de dev pour MVP rapide</option>
+                        <option value="Audit d'architecture existante">Audit d'architecture existante</option>
+                        <option value="custom">Autre besoin complexe...</option>
+                    </select>
+                    <input type="text" class="custom-option" id="custom_tech_problem">
+                </div>
+                <div class="question">
+                    <label>Nombre de personnes dans l'équipe technique ?</label>
+                    <select id="team_size">
+                        <option value="Solo (0-1)">Solo (0-1)</option>
+                        <option value="Petite (2-5)">Petite (2-5)</option>
+                        <option value="Large (>10)">Large (>10)</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <label>Impact attendu du consultant ?</label>
+                    <select id="impact">
+                        <option value="Lead / Architecture">Lead / Architecture</option>
+                        <option value="Exécution / Delivery">Exécution / Delivery</option>
+                        <option value="Mentorat / Formation">Mentorat / Formation</option>
+                    </select>
+                </div>
             </div>
         </section>
 
         <section>
-            <h2>D. Notes Libres (Prise de notes RT)</h2>
-            <textarea id="notes" rows="10" placeholder="Saisissez ici les points clés, les objectifs changeants du client, ou les points de friction techniques..."></textarea>
+            <h2>C. Attendus de la RT (Pour le CTO)</h2>
+            <div class="grid">
+                <div class="question">
+                    <label>Objectif de la RT</label>
+                    <select id="rt_goal">
+                        <option value="Validation de la faisabilité technique">Validation de la faisabilité technique</option>
+                        <option value="Vente de l'expertise GoMind">Vente de l'expertise GoMind</option>
+                        <option value="Chiffrage / Estimation de charge">Chiffrage / Estimation de charge</option>
+                        <option value="Définition précise du profil à chasser">Définition précise du profil à chasser</option>
+                    </select>
+                </div>
+                <div class="question">
+                    <label>Showcase à présenter</label>
+                    <select id="showcase">
+                        <option value="Aucun">Aucun (Discussion pure)</option>
+                        <option value="Assistant Messagerie IA (Traduction/Réponse)">Assistant Messagerie IA (Traduction/Réponse)</option>
+                        <option value="LLM+RAG+Graphe Hospitalier">LLM+RAG+Graphe Hospitalier</option>
+                    </select>
+                </div>
+                <div class="question full-width">
+                    <label>Notes & Points d'attention (Chaotique ? Objectifs changeants ?)</label>
+                    <textarea id="notes" rows="6" placeholder="Ex: Le client est flou sur la BDD, il veut de l'IA mais n'a pas de données propres..."></textarea>
+                </div>
+            </div>
         </section>
 
         <div class="score-box">
             <div>
-                <strong>TEMPÉRATURE :</strong>
-                <span id="temp_label">FROID</span>
+                <span id="temp_label" class="temp-indicator">TEMPÉRATURE : FROID</span>
             </div>
-            <div class="score-val">Score: <span id="final_score">0</span>/30</div>
-            <button type="button" class="btn" onclick="downloadNotes()">Télécharger (.md)</button>
+            <div class="score-val"><span id="final_score">0</span>/30</div>
+            <button type="button" class="btn-export" onclick="downloadNotes()">EXPORTER (.MD)</button>
         </div>
     </form>
 </div>
@@ -202,62 +264,73 @@ html_content = """
         const customInput = select.nextElementSibling;
         if (select.value === 'custom') {
             customInput.style.display = 'block';
+            customInput.focus();
         } else {
             customInput.style.display = 'none';
         }
     }
 
     function updateScore() {
-        const p1 = parseInt(document.getElementById('score_power').value) || 0;
-        const b1 = parseInt(document.getElementById('score_budget').value) || 0;
-        const u1 = parseInt(document.getElementById('score_urgency').value) || 0;
+        const p = parseInt(document.getElementById('score_power').value) || 0;
+        const b = parseInt(document.getElementById('score_budget').value) || 0;
+        const u = parseInt(document.getElementById('score_urgency').value) || 0;
 
-        // Calcul pondéré simplifié pour le total sur 30
-        const total = Math.round((p1 + b1 + u1));
+        let total = p + b + u;
+        if (total < 0) total = 0;
+        if (total > 30) total = 30;
+
         document.getElementById('final_score').innerText = total;
 
         const label = document.getElementById('temp_label');
         if (total >= 22) { 
             label.innerText = "CHAUD -> GO RT"; 
-            label.parentElement.style.color = "#86efac";
+            label.style.background = "#16a34a";
+            label.style.color = "white";
         } else if (total >= 12) { 
             label.innerText = "TIÈDE -> SUIVI"; 
-            label.parentElement.style.color = "#fde047";
+            label.style.background = "#ca8a04";
+            label.style.color = "white";
         } else { 
             label.innerText = "FROID -> ABANDON"; 
-            label.parentElement.style.color = "#fca5a5";
+            label.style.background = "#dc2626";
+            label.style.color = "white";
         }
     }
 
     function downloadNotes() {
-        const client = document.getElementById('client_name').value;
+        const client = document.getElementById('client_info').value || "Inconnu";
         const score = document.getElementById('final_score').innerText;
         const notes = document.getElementById('notes').value;
-        const tech = document.getElementById('tech_domain').value === 'custom' ? document.getElementById('custom_tech').value : document.getElementById('tech_domain').value;
-        
-        const content = `# Rapport de Qualification GoMind\\n\\n` +
-            `**Client:** ${client}\\n` +
-            `**Score Global:** ${score}/30\\n` +
-            `**Domaine:** ${tech}\\n` +
-            `**Showcase suggéré:** ${document.getElementById('showcase').value}\\n\\n` +
-            `## Notes de l'entretien\\n${notes}\\n\\n` +
-            `--- \\n*Note: Ce document doit être couplé à la transcription IA pour validation RT.*`;
+        const stack = document.getElementById('tech_stack').value;
+        const goal = document.getElementById('rt_goal').value;
+        const showcase = document.getElementById('showcase').value;
+
+        let domain = document.getElementById('tech_domain').value;
+        if (domain === 'custom') domain = document.getElementById('custom_tech_domain').value;
+
+        const content = `# GoMind - Rapport de Qualification\\n\\n` +
+            `## 📊 Score de Température : ${score}/30\\n` +
+            `**Client :** ${client}\\n` +
+            `**Domaine :** ${domain}\\n` +
+            `**Stack :** ${stack}\\n\\n` +
+            `## 🎯 Objectifs RT\\n` +
+            `- **But :** ${goal}\\n` +
+            `- **Showcase :** ${showcase}\\n\\n` +
+            `## 📝 Notes & Contexte\\n` +
+            `${notes}\\n\\n` +
+            `--- \\n` +
+            `**⚠️ ATTENTION :** Ce document DOIT être accompagné du compte-rendu généré par l'IA pour valider l'étape de RT.`;
 
         const blob = new Blob([content], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Qualif_${client.replace(/\\s+/g, '_')}.md`;
+        a.download = `Qualif_GoMind_${client.replace(/\\s+/g, '_')}.md`;
         a.click();
     }
 
-    // Initialisation
     updateScore();
 </script>
 
 </body>
 </html>
-"""
-
-with open("GoMind_Qualif_Tool.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
