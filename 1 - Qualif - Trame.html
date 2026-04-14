@@ -35,7 +35,6 @@
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             margin-bottom: 30px;
-            position: relative;
         }
         .step { font-size: 0.75rem; font-weight: 800; color: var(--secondary); opacity: 0.4; text-transform: uppercase; }
         .step.active { color: var(--primary); opacity: 1; border-bottom: 3px solid var(--primary); }
@@ -62,9 +61,17 @@
             border-radius: 8px;
             font-size: 0.95rem;
             background: #fff;
+            box-sizing: border-box;
         }
-        select:focus, input:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
         
+        .score-hint {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 4px;
+            display: block;
+        }
+
         .custom-option { margin-top: 8px; display: none; background: var(--primary-light); border-style: dashed; }
 
         .warning-ia {
@@ -104,9 +111,7 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: 700;
-            transition: all 0.2s;
         }
-        .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); }
     </style>
 </head>
 <body>
@@ -128,8 +133,8 @@
     <div class="warning-ia">
         <span>⚠️</span>
         <div>
-            <strong>RÈGLE D'OR :</strong> La RT n'est déclenchée que si le score est vert. <br>
-            <strong>PRÉ-REQUIS :</strong> Lancer l'enregistrement/transcription IA avant de poser la première question.
+            <strong>RÈGLE D'OR :</strong> Score ≥ 22 requis pour la RT. <br>
+            <strong>PRÉ-REQUIS :</strong> Activez l'IA Notes avant de débuter.
         </div>
     </div>
 
@@ -137,35 +142,47 @@
         <section>
             <h2>A. Business & Pouvoir</h2>
             <div class="grid">
-                <div class="question">
-                    <label>Client (Nom, Poste, Équipe)</label>
-                    <input type="text" id="client_info" placeholder="ex: Marc Lefebvre, VP Engineering, Platform Team" required>
+                <div class="question full-width">
+                    <label>Client (Nom, Poste précis, Équipe)</label>
+                    <input type="text" id="client_info" placeholder="ex: Marc Lefebvre, VP Engineering, Data Platform Team" required>
                 </div>
                 <div class="question">
                     <label>Décision Financière</label>
                     <select id="score_power" onchange="updateScore()">
                         <option value="0">-- Sélectionner --</option>
-                        <option value="10">Signataire (EB) - A le budget</option>
-                        <option value="7">Manager technique (Valideur - Besoin de l'EB)</option>
-                        <option value="3">RH / Achats (Process pur)</option>
-                        <option value="0">Consultant externe (Zéro pouvoir)</option>
+                        <option value="10">Signataire Direct (EB) - Gère le budget</option>
+                        <option value="7">Manager technique (Valideur - Appuie la propale)</option>
+                        <option value="3">RH / Achats (Process administratif uniquement)</option>
+                        <option value="0">Consultant / Externe (Zéro pouvoir)</option>
                     </select>
+                    <span class="score-hint" id="hint_power">Score: 0</span>
                 </div>
                 <div class="question">
                     <label>Budget (Obligatoire)</label>
                     <select id="score_budget" onchange="updateScore()">
                         <option value="0">-- Sélectionner --</option>
                         <option value="10">Validé et disponible immédiatement</option>
-                        <option value="5">En cours de déblocage (Q2/Q3)</option>
-                        <option value="-10">Pas de budget (Stop)</option>
+                        <option value="5">En cours de déblocage (Prévu Q2/Q3)</option>
+                        <option value="-10">Pas de budget (Abandon ou Suivi)</option>
                     </select>
+                    <span class="score-hint" id="hint_budget">Score: 0</span>
                 </div>
                 <div class="question">
                     <label>Timeline / Urgence</label>
                     <select id="score_urgency" onchange="updateScore()">
+                        <option value="0">-- Sélectionner --</option>
                         <option value="10">Démarrage < 15 jours</option>
                         <option value="7">Sous 1 mois</option>
                         <option value="2">Projet "Long terme" / Veille</option>
+                    </select>
+                    <span class="score-hint" id="hint_urgency">Score: 0</span>
+                </div>
+                <div class="question">
+                    <label>Valeur Métier / Enjeu</label>
+                    <select id="business_value">
+                        <option value="Strategique">Stratégique (Objectif Groupe)</option>
+                        <option value="Operationnel">Opérationnel (Gain de productivité)</option>
+                        <option value="Maintenance">Maintenance / Renfort ponctuel</option>
                     </select>
                 </div>
             </div>
@@ -180,9 +197,9 @@
                         <option value="IA / LLM / RAG">IA / LLM / RAG</option>
                         <option value="Data Engineering / Pipeline">Data Engineering / Pipeline</option>
                         <option value="Data Science / ML Ops">Data Science / ML Ops</option>
+                        <option value="Architecture Data / BDD">Architecture Data / BDD</option>
                         <option value="Fullstack (React/Python)">Fullstack (React/Python)</option>
                         <option value="DevOps / Cloud Infra">DevOps / Cloud Infra</option>
-                        <option value="Architecture Data / BDD">Architecture Data / BDD</option>
                         <option value="custom">Autre (Préciser...)</option>
                     </select>
                     <input type="text" class="custom-option" id="custom_tech_domain">
@@ -192,59 +209,59 @@
                     <input type="text" id="tech_stack" placeholder="ex: Python, Azure, Snowflake, dbt...">
                 </div>
                 <div class="question full-width">
-                    <label>Problématique Technique majeure à résoudre</label>
+                    <label>Problématique technique à résoudre</label>
                     <select id="tech_problem" onchange="handleCustom(this)">
                         <option value="Mise en place RAG sur données internes">Mise en place RAG sur données internes</option>
                         <option value="Migration Cloud / Data Warehouse">Migration Cloud / Data Warehouse</option>
                         <option value="Industrialisation de modèles ML">Industrialisation de modèles ML</option>
                         <option value="Renfort de dev pour MVP rapide">Renfort de dev pour MVP rapide</option>
-                        <option value="Audit d'architecture existante">Audit d'architecture existante</option>
+                        <option value="Audit d'architecture / BDD">Audit d'architecture / BDD</option>
                         <option value="custom">Autre besoin complexe...</option>
                     </select>
                     <input type="text" class="custom-option" id="custom_tech_problem">
                 </div>
                 <div class="question">
-                    <label>Nombre de personnes dans l'équipe technique ?</label>
+                    <label>Taille de l'équipe technique</label>
                     <select id="team_size">
-                        <option value="Solo (0-1)">Solo (0-1)</option>
-                        <option value="Petite (2-5)">Petite (2-5)</option>
-                        <option value="Large (>10)">Large (>10)</option>
+                        <option value="Seul / Lancement">Seul / Lancement</option>
+                        <option value="2-5 personnes">2-5 personnes</option>
+                        <option value=">10 personnes">>10 personnes</option>
                     </select>
                 </div>
                 <div class="question">
-                    <label>Impact attendu du consultant ?</label>
+                    <label>Impact attendu</label>
                     <select id="impact">
-                        <option value="Lead / Architecture">Lead / Architecture</option>
-                        <option value="Exécution / Delivery">Exécution / Delivery</option>
-                        <option value="Mentorat / Formation">Mentorat / Formation</option>
+                        <option value="Expertise / Architecture">Expertise / Architecture (Lead)</option>
+                        <option value="Force de frappe / Delivery">Force de frappe / Delivery</option>
+                        <option value="Cadrage technique uniquement">Cadrage technique uniquement</option>
                     </select>
                 </div>
             </div>
         </section>
 
         <section>
-            <h2>C. Attendus de la RT (Pour le CTO)</h2>
+            <h2>C. Préparation de la RT</h2>
             <div class="grid">
                 <div class="question">
                     <label>Objectif de la RT</label>
                     <select id="rt_goal">
-                        <option value="Validation de la faisabilité technique">Validation de la faisabilité technique</option>
-                        <option value="Vente de l'expertise GoMind">Vente de l'expertise GoMind</option>
-                        <option value="Chiffrage / Estimation de charge">Chiffrage / Estimation de charge</option>
-                        <option value="Définition précise du profil à chasser">Définition précise du profil à chasser</option>
+                        <option value="Valider la faisabilité">Valider la faisabilité technique</option>
+                        <option value="Convaincre (Vente expertise)">Convaincre (Vente expertise)</option>
+                        <option value="Chiffrer le projet">Chiffrer le projet / Estimation</option>
+                        <option value="Définir le profil consultant">Définir le profil consultant</option>
                     </select>
                 </div>
                 <div class="question">
                     <label>Showcase à présenter</label>
                     <select id="showcase">
-                        <option value="Aucun">Aucun (Discussion pure)</option>
-                        <option value="Assistant Messagerie IA (Traduction/Réponse)">Assistant Messagerie IA (Traduction/Réponse)</option>
-                        <option value="LLM+RAG+Graphe Hospitalier">LLM+RAG+Graphe Hospitalier</option>
+                        <option value="Aucun">Aucun (Discussion)</option>
+                        <option value="Assistant Messagerie IA">Assistant Messagerie / Traduction</option>
+                        <option value="LLM+RAG Hospitalier">LLM+RAG Hospitalier (Graphe)</option>
                     </select>
                 </div>
                 <div class="question full-width">
-                    <label>Notes & Points d'attention (Chaotique ? Objectifs changeants ?)</label>
-                    <textarea id="notes" rows="6" placeholder="Ex: Le client est flou sur la BDD, il veut de l'IA mais n'a pas de données propres..."></textarea>
+                    <label>Notes & Alertes (Chaotique ? Objectifs flous ?)</label>
+                    <textarea id="notes" rows="6" placeholder="Soyez précis : Pourquoi le CTO doit-il intervenir ? Quels sont les points de friction ?"></textarea>
                 </div>
             </div>
         </section>
@@ -254,7 +271,7 @@
                 <span id="temp_label" class="temp-indicator">TEMPÉRATURE : FROID</span>
             </div>
             <div class="score-val"><span id="final_score">0</span>/30</div>
-            <button type="button" class="btn-export" onclick="downloadNotes()">EXPORTER (.MD)</button>
+            <button type="button" class="btn-export" onclick="placeholderExport()">EXPORTER (.MD)</button>
         </div>
     </form>
 </div>
@@ -274,6 +291,10 @@
         const p = parseInt(document.getElementById('score_power').value) || 0;
         const b = parseInt(document.getElementById('score_budget').value) || 0;
         const u = parseInt(document.getElementById('score_urgency').value) || 0;
+
+        document.getElementById('hint_power').innerText = "Score: " + p;
+        document.getElementById('hint_budget').innerText = "Score: " + b;
+        document.getElementById('hint_urgency').innerText = "Score: " + u;
 
         let total = p + b + u;
         if (total < 0) total = 0;
@@ -297,36 +318,8 @@
         }
     }
 
-    function downloadNotes() {
-        const client = document.getElementById('client_info').value || "Inconnu";
-        const score = document.getElementById('final_score').innerText;
-        const notes = document.getElementById('notes').value;
-        const stack = document.getElementById('tech_stack').value;
-        const goal = document.getElementById('rt_goal').value;
-        const showcase = document.getElementById('showcase').value;
-
-        let domain = document.getElementById('tech_domain').value;
-        if (domain === 'custom') domain = document.getElementById('custom_tech_domain').value;
-
-        const content = `# GoMind - Rapport de Qualification\\n\\n` +
-            `## 📊 Score de Température : ${score}/30\\n` +
-            `**Client :** ${client}\\n` +
-            `**Domaine :** ${domain}\\n` +
-            `**Stack :** ${stack}\\n\\n` +
-            `## 🎯 Objectifs RT\\n` +
-            `- **But :** ${goal}\\n` +
-            `- **Showcase :** ${showcase}\\n\\n` +
-            `## 📝 Notes & Contexte\\n` +
-            `${notes}\\n\\n` +
-            `--- \\n` +
-            `**⚠️ ATTENTION :** Ce document DOIT être accompagné du compte-rendu généré par l'IA pour valider l'étape de RT.`;
-
-        const blob = new Blob([content], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Qualif_GoMind_${client.replace(/\\s+/g, '_')}.md`;
-        a.click();
+    function placeholderExport() {
+        alert("Placeholder : La génération du fichier Markdown sera activée une fois le questionnaire validé.");
     }
 
     updateScore();
