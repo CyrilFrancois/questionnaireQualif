@@ -269,7 +269,7 @@
                 <span id="temp_label" class="temp-indicator" style="background: var(--danger)">TEMPÉRATURE : FROID</span>
             </div>
             <div class="score-val"><span id="final_score">0</span>/30</div>
-            <button type="button" id="exportBtn" class="btn-export" onclick="placeholderExport()" disabled>EXPORTER (.MD)</button>
+            <button type="button" id="exportBtn" class="btn-export" onclick="generatemdfile()" disabled>EXPORTER (.MD)</button>
         </div>
     </form>
 </div>
@@ -345,8 +345,59 @@
     form.addEventListener('input', validateForm);
     form.addEventListener('change', validateForm);
 
-    function placeholderExport() {
-        alert("Succès ! Tous les champs sont remplis. Le MD pourra être généré ici.");
+    function generatemdfile() {
+        const client = document.getElementById('client_info').value;
+        const score = document.getElementById('final_score').innerText;
+        const temp = document.getElementById('temp_label').innerText;
+        const notes = document.getElementById('notes').value;
+        
+        // Récupération des labels des selects pour un MD explicite
+        const getTxt = (id) => {
+            const el = document.getElementById(id);
+            return el.options[el.selectedIndex].text;
+        };
+
+        const mdContent = `# Rapport de Qualification GoMind : ${client}
+
+    ## 🌡️ Synthèse du Score
+    **Statut final :** ${temp}
+    **Score Global :** ${score}/30
+
+    ### Détail du Scoring :
+    * **Pouvoir Décisionnel :** ${getTxt('score_power')}
+    * **Budget :** ${getTxt('score_budget')}
+    * **Urgence / Timeline :** ${getTxt('score_urgency')}
+
+    ---
+
+    ## 🛠️ Analyse Technique
+    * **Domaine IT :** ${document.getElementById('tech_domain').value === 'custom' ? document.getElementById('custom_tech_domain').value : getTxt('tech_domain')}
+    * **Stack actuelle :** ${document.getElementById('tech_stack').value}
+    * **Besoin principal :** ${document.getElementById('tech_problem').value === 'custom' ? document.getElementById('custom_tech_problem').value : getTxt('tech_problem')}
+    * **Équipe & Impact :** Équipe ${getTxt('team_size')} | Profil attendu : ${getTxt('impact')}
+
+    ---
+
+    ## 🎯 Objectifs de la RT (CTO)
+    * **But de l'intervention :** ${getTxt('rt_goal')}
+    * **Démonstration suggérée :** ${getTxt('showcase')}
+
+    ### 📝 Notes de contexte & Points d'attention
+    ${notes}
+
+    ---
+    > **Instructions LLM :** Ce document sert de base à la validation technique. Analyser les "Notes" par rapport à la transcription de l'appel pour identifier d'éventuels risques d'implémentation.`;
+
+        // Logique de téléchargement
+        const blob = new Blob([mdContent], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `QUALIF_${client.replace(/\s+/g, '_')}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     // Lancement initial
