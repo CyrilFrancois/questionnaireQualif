@@ -285,20 +285,23 @@
             </div>
         </section>
 
-        <div class="score-box">
+<div class="score-box">
             <div>
                 <span id="temp_label" class="temp-indicator" style="background: var(--danger)">TEMPÉRATURE : FROID</span>
             </div>
             <div class="score-val"><span id="final_score">0</span>/30</div>
-            <button type="button" id="exportBtn" class="btn-export" onclick="generatemdfile()" disabled>EXPORTER (.MD)</button>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" id="exportBtn" class="btn-export" onclick="exportFile('md')" disabled>EXPORTER (.MD)</button>
+                <button type="button" id="pdfBtn" class="btn-export" onclick="exportFile('pdf')" style="background: var(--primary)" disabled>PDF</button>
+            </div>
         </div>
     </form>
 </div>
 
 <script>
     const form = document.getElementById('qualifForm');
-    const fields = document.querySelectorAll('.val-field');
-    const btn = document.getElementById('exportBtn');
+    const btnMd = document.getElementById('exportBtn');
+    const btnPdf = document.getElementById('pdfBtn');
 
     function handleCustom(select) {
         const customInput = select.nextElementSibling;
@@ -315,11 +318,10 @@
 
     function validateForm() {
         let allValid = true;
-        // On récupère les champs à valider (inclut les custom s'ils sont affichés)
         const currentFields = document.querySelectorAll('.val-field');
 
         currentFields.forEach(field => {
-            if (field.offsetParent !== null) { // Vérifie si le champ est visible
+            if (field.offsetParent !== null) {
                 if (field.value.trim() === "") {
                     field.classList.add('invalid');
                     allValid = false;
@@ -329,26 +331,21 @@
             }
         });
 
-        if (allValid) {
-            btn.classList.add('ready');
-            btn.disabled = false;
-        } else {
-            btn.classList.remove('ready');
-            btn.disabled = true;
-        }
+        [btnMd, btnPdf].forEach(b => {
+            b.disabled = !allValid;
+            allValid ? b.classList.add('ready') : b.classList.remove('ready');
+        });
     }
 
     function updateScore() {
         const p = parseInt(document.getElementById('score_power').value) || 0;
         const b = parseInt(document.getElementById('score_budget').value) || 0;
         const u = parseInt(document.getElementById('score_urgency').value) || 0;
-
         document.getElementById('hint_power').innerText = "Score: " + p;
         document.getElementById('hint_budget').innerText = "Score: " + b;
         document.getElementById('hint_urgency').innerText = "Score: " + u;
 
-        let total = p + b + u;
-        if (total < 0) total = 0;
+        let total = Math.max(0, p + b + u);
         document.getElementById('final_score').innerText = total;
 
         const label = document.getElementById('temp_label');
@@ -362,66 +359,63 @@
         validateForm();
     }
 
-    // Écouteur global sur le formulaire pour détecter n'importe quel changement
     form.addEventListener('input', validateForm);
     form.addEventListener('change', validateForm);
 
-    function generatemdfile() {
+    function exportFile(type) {
         const client = document.getElementById('client_info').value;
         const score = document.getElementById('final_score').innerText;
         const temp = document.getElementById('temp_label').innerText;
         const notes = document.getElementById('notes').value;
+        const getTxt = (id) => document.getElementById(id).options[document.getElementById(id).selectedIndex].text;
         
-        // Récupération des labels des selects pour un MD explicite
-        const getTxt = (id) => {
-            const el = document.getElementById(id);
-            return el.options[el.selectedIndex].text;
-        };
+        const domain = document.getElementById('tech_domain').value === 'custom' ? document.getElementById('custom_tech_domain').value : getTxt('tech_domain');
+        const problem = document.getElementById('tech_problem').value === 'custom' ? document.getElementById('custom_tech_problem').value : getTxt('tech_problem');
 
-        const mdContent = `# Rapport de Qualification GoMind : ${client}
-
-    ## 🌡️ Synthèse du Score
-    **Statut final :** ${temp}
-    **Score Global :** ${score}/30
-
-    ### Détail du Scoring :
-    * **Pouvoir Décisionnel :** ${getTxt('score_power')}
-    * **Budget :** ${getTxt('score_budget')}
-    * **Urgence / Timeline :** ${getTxt('score_urgency')}
-
-    ---
-
-    ## 🛠️ Analyse Technique
-    * **Domaine IT :** ${document.getElementById('tech_domain').value === 'custom' ? document.getElementById('custom_tech_domain').value : getTxt('tech_domain')}
-    * **Stack actuelle :** ${document.getElementById('tech_stack').value}
-    * **Besoin principal :** ${document.getElementById('tech_problem').value === 'custom' ? document.getElementById('custom_tech_problem').value : getTxt('tech_problem')}
-    * **Équipe & Impact :** Équipe ${getTxt('team_size')} | Profil attendu : ${getTxt('impact')}
-
-    ---
-
-    ## 🎯 Objectifs de la RT (CTO)
-    * **But de l'intervention :** ${getTxt('rt_goal')}
-    * **Démonstration suggérée :** ${getTxt('showcase')}
-
-    ### 📝 Notes de contexte & Points d'attention
-    ${notes}
-
-    ---
-    > **Instructions LLM :** Ce document sert de base à la validation technique. Analyser les "Notes" par rapport à la transcription de l'appel pour identifier d'éventuels risques d'implémentation.`;
-
-        // Logique de téléchargement
-        const blob = new Blob([mdContent], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `QUALIF_${client.replace(/\s+/g, '_')}.md`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        if (type === 'md') {
+            const mdContent = `# Rapport de Qualification GoMind : ${client}\n\n## 🌡️ Synthèse\n**Statut :** ${temp}\n**Score :** ${score}/30\n\n### Détail :\n* Pouvoir : ${getTxt('score_power')}\n* Budget : ${getTxt('score_budget')}\n* Urgence : ${getTxt('score_urgency')}\n\n---\n\n## 🛠️ Technique\n* Domaine : ${domain}\n* Stack : ${document.getElementById('tech_stack').value}\n* Problème : ${problem}\n* Équipe : ${getTxt('team_size')} | Impact : ${getTxt('impact')}\n\n---\n\n## 🎯 Objectifs RT\n* But : ${getTxt('rt_goal')}\n* Showcase : ${getTxt('showcase')}\n\n### Notes\n${notes}`;
+            const blob = new Blob([mdContent], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `QUALIF_${client.replace(/\s+/g, '_')}.md`;
+            a.click();
+        } else {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html><head><title>Qualification GoMind - ${client}</title>
+                <style>
+                    body { font-family: sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
+                    h1 { color: #1e40af; border-bottom: 2px solid #1e40af; }
+                    h2 { color: #1e40af; margin-top: 30px; background: #eff6ff; padding: 5px 10px; }
+                    .score { font-weight: bold; font-size: 1.2em; color: white; padding: 10px; border-radius: 5px; display: inline-block; }
+                    .details { margin-top: 20px; border: 1px solid #cbd5e1; padding: 15px; border-radius: 8px; }
+                </style></head><body>
+                <h1>Rapport de Qualification GoMind</h1>
+                <p><strong>Client :</strong> ${client}</p>
+                <div class="score" style="background:${document.getElementById('temp_label').style.background}">${temp} (${score}/30)</div>
+                <h2>Analyse Stratégique</h2>
+                <ul>
+                    <li><strong>Pouvoir :</strong> ${getTxt('score_power')}</li>
+                    <li><strong>Budget :</strong> ${getTxt('score_budget')}</li>
+                    <li><strong>Urgence :</strong> ${getTxt('score_urgency')}</li>
+                </ul>
+                <h2>Analyse Technique</h2>
+                <ul>
+                    <li><strong>Domaine :</strong> ${domain}</li>
+                    <li><strong>Stack :</strong> ${document.getElementById('tech_stack').value}</li>
+                    <li><strong>Problématique :</strong> ${problem}</li>
+                </ul>
+                <h2>Objectifs RT</h2>
+                <p><strong>But :</strong> ${getTxt('rt_goal')}</p>
+                <p><strong>Notes de contexte :</strong> ${notes.replace(/\n/g, '<br>')}</p>
+                </body></html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
     }
 
-    // Lancement initial
     validateForm();
 </script>
 
